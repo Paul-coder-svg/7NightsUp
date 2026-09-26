@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>7 Nights Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0d;
+    --bg-2: #121116;
+    --panel: #17151b;
+    --line: #2b2731;
+    --ink: #e9e3d6;
+    --ink-dim: #9a9388;
+    --ink-faint: #6b6660;
+    --ember: #d9a441;
+    --ember-glow: rgba(217, 164, 65, 0.35);
+    --blood: #8c2a2a;
+    --blood-bright: #b23838;
+    --focus: #d9a441;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg: #131017; --bg-2: #1a1620; --panel: #1e1a24; }
+  }
+  :root[data-theme="light"] { --bg: #131017; --bg-2: #1a1620; --panel: #1e1a24; }
+  :root[data-theme="dark"]  { --bg: #0a0a0d; --bg-2: #121116; --panel: #17151b; }
+
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  ::selection { background: var(--blood); color: var(--ink); }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+
+  .display { font-family: 'Cormorant Garamond', Georgia, serif; }
+  .mono { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- fixed HUD chrome (persistent, not blog-like) ---------- */
+  .hud { position: fixed; inset: 0; pointer-events: none; z-index: 40; }
+
+  .hud .bracket { position: absolute; width: 26px; height: 26px; opacity: 0.55; }
+  .hud .bracket.tl { top: calc(16px + env(safe-area-inset-top,0px)); left: 16px; border-top: 2px solid var(--ink-faint); border-left: 2px solid var(--ink-faint); }
+  .hud .bracket.tr { top: calc(16px + env(safe-area-inset-top,0px)); right: 16px; border-top: 2px solid var(--ink-faint); border-right: 2px solid var(--ink-faint); }
+  .hud .bracket.bl { bottom: calc(16px + env(safe-area-inset-bottom,0px)); left: 16px; border-bottom: 2px solid var(--ink-faint); border-left: 2px solid var(--ink-faint); }
+  .hud .bracket.br { bottom: calc(16px + env(safe-area-inset-bottom,0px)); right: 16px; border-bottom: 2px solid var(--ink-faint); border-right: 2px solid var(--ink-faint); }
+
+  .hud .rec {
+    position: absolute; top: calc(16px + env(safe-area-inset-top,0px)); left: 52px;
+    display: flex; align-items: center; gap: 7px; font-size: 11px; letter-spacing: 0.04em; color: var(--ink-dim);
+  }
+  .hud .rec .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blood-bright); animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  .hud .clock { position: absolute; top: calc(16px + env(safe-area-inset-top,0px)); right: 52px; font-size: 11px; color: var(--ink-faint); }
+
+  .scanlines {
+    position: fixed; inset: 0; z-index: 39; pointer-events: none; opacity: 0.05;
+    background: repeating-linear-gradient(to bottom, #fff 0px, #fff 1px, transparent 1px, transparent 3px);
+  }
+
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0.045; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative; min-height: 100svh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center; padding: 90px 24px 60px;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 78%, var(--ember-glow), transparent 65%),
+      radial-gradient(ellipse 120% 80% at 50% 0%, #1a1720, var(--bg) 60%);
+  }
+
+  .house { width: min(260px, 55vw); height: auto; margin-bottom: 4px; }
+  .window-glow { animation: flicker 5s infinite; transform-origin: center; }
+  @keyframes flicker {
+    0%,100% { opacity: 1; } 4% { opacity: .4; } 8% { opacity: .95; } 10% { opacity: .5; }
+    13% { opacity: 1; } 45% { opacity: 1; } 48% { opacity: .55; } 52% { opacity: 1; }
+    78% { opacity: .85; } 82% { opacity: 1; }
+  }
+
+  h1.title { font-size: clamp(3.2rem, 13vw, 6rem); font-weight: 500; line-height: 0.92; margin: 4px 0 0; letter-spacing: -0.01em; }
+  h1.title .num { display: block; font-size: clamp(4.5rem, 20vw, 8.5rem); font-weight: 600; color: var(--ember); text-shadow: 0 0 40px var(--ember-glow); }
+  h1.title .words { display: block; font-style: italic; color: var(--ink); }
+
+  .tagline { color: var(--ink-dim); font-size: clamp(1rem, 2.2vw, 1.15rem); max-width: 420px; margin: 16px 0 30px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; background: var(--blood); color: #f4ece2;
+    border: 1px solid var(--blood-bright); padding: 14px 26px; border-radius: 4px; font-weight: 600;
+    font-size: 0.95rem; text-decoration: none; transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  .btn:hover { background: var(--blood-bright); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(178,56,56,.35); }
+  .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+  .construction-note { margin-top: 20px; font-size: 0.78rem; color: var(--ink-faint); max-width: 300px; }
+
+  /* ---------- section shell ---------- */
+  section { padding: 90px 0; border-top: 1px solid var(--line); position: relative; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
+  .section-head h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); font-weight: 500; margin: 0; }
+  .section-head .tag { font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.04em; }
+
+  /* ---------- camera coverage ---------- */
+  .camlist { border: 1px solid var(--line); background: var(--bg-2); }
+  .camrow {
+    display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+    border-bottom: 1px solid var(--line); font-size: 0.9rem;
+  }
+  .camrow:last-child { border-bottom: none; }
+  .camrow .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .camrow .dot.on { background: var(--ember); box-shadow: 0 0 6px var(--ember-glow); }
+  .camrow .dot.off { background: var(--blood-bright); }
+  .camrow .room { flex: 1; color: var(--ink); }
+  .camrow .stat { font-size: 0.72rem; color: var(--ink-faint); letter-spacing: 0.03em; }
+  .camrow.off .room { color: var(--ink-dim); }
+  .camrow.off .stat { color: var(--blood-bright); }
+  .cov-note { margin: 18px 0 0; color: var(--ink-dim); font-size: 0.88rem; max-width: 420px; }
+
+  /* ---------- threat log (interactive tabs) ---------- */
+  .filelog { display: grid; grid-template-columns: 200px 1fr; gap: 0; border: 1px solid var(--line); background: var(--bg-2); }
+  .tabs { display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+  .tab {
+    text-align: left; padding: 18px 20px; border-bottom: 1px solid var(--line); color: var(--ink-faint);
+    font-size: 0.85rem; letter-spacing: 0.02em; transition: color .15s ease, background .15s ease; position: relative;
+  }
+  .tab .r { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; color: inherit; margin-bottom: 3px; }
+  .tab .w { display: block; font-size: 0.75rem; color: var(--ink-faint); }
+  .tab:last-child { border-bottom: none; }
+  .tab:hover { color: var(--ink); background: rgba(255,255,255,0.02); }
+  .tab.active { color: var(--ember); background: rgba(217,164,65,0.06); }
+  .tab.active::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ember); }
+
+  .panels { position: relative; min-height: 260px; }
+  .panel { display: none; padding: 34px 32px; }
+  .panel.active { display: block; }
+  .panel h3 { margin: 0 0 10px; font-size: 1.25rem; font-weight: 500; }
+  .panel p { margin: 0 0 20px; color: var(--ink-dim); font-size: 0.95rem; max-width: 440px; }
+  .figures { display: flex; gap: 10px; }
+  .figure { width: 32px; height: 42px; }
+
+  /* ---------- household board ---------- */
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .tile {
+    position: relative; background: var(--bg-2); aspect-ratio: 3/4; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; text-align: left; width: 100%;
+  }
+  .tile .bust { width: 42%; height: auto; transition: opacity .2s ease, transform .3s ease; }
+  .tile .reveal {
+    position: absolute; inset: 0; background: rgba(10,10,13,0.94); padding: 18px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    transform: translateY(100%); transition: transform .28s ease;
+  }
+  .tile:hover .reveal, .tile.flipped .reveal { transform: translateY(0); }
+  .tile:hover .bust, .tile.flipped .bust { opacity: 0.15; transform: scale(1.04); }
+  .tile .reveal h3 { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.25rem; margin: 0 0 4px; }
+  .tile .reveal .active-from { font-size: 0.65rem; font-family: 'IBM Plex Mono', monospace; color: var(--ink-faint); margin: 0 0 8px; }
+  .tile .reveal p.line { font-size: 0.82rem; color: var(--ink-dim); margin: 0; }
+  .tile.extra .reveal .active-from { color: var(--blood-bright); }
+  .tile .tap-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 0.62rem; color: var(--ink-faint); letter-spacing: 0.04em; }
+
+  /* ---------- cta band ---------- */
+  .cta-band { text-align: center; background: radial-gradient(ellipse 70% 100% at 50% 100%, rgba(140,42,42,0.12), transparent 70%); }
+  .cta-band .prose { max-width: 480px; margin: 0 auto; }
+  .cta-band p { color: var(--ink-dim); margin-bottom: 28px; }
+
+  footer {
+    padding: 36px 0; border-top: 1px solid var(--line); font-size: 0.76rem; color: var(--ink-faint);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  }
+  footer a { color: var(--ink-dim); text-decoration: underline; text-underline-offset: 2px; }
+
+  @media (max-width: 760px) {
+    .filelog { grid-template-columns: 1fr; }
+    .tabs { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--line); }
+    .tab { border-bottom: none; border-right: 1px solid var(--line); white-space: nowrap; }
+    .tab.active::before { top: auto; bottom: 0; left: 0; right: 0; width: auto; height: 3px; }
+    .board { grid-template-columns: repeat(2, 1fr); }
+    section { padding: 64px 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .window-glow, .hud .rec .dot { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="hud" aria-hidden="true">
+  <div class="bracket tl"></div><div class="bracket tr"></div>
+  <div class="bracket bl"></div><div class="bracket br"></div>
+  <div class="rec"><span class="dot"></span><span class="mono">REC</span></div>
+  <div class="clock mono" id="hudClock">CAM 04</div>
+</div>
+
+<header class="hero">
+  <svg class="house" viewBox="0 0 200 170" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <polygon points="100,10 190,80 10,80" fill="#1c1920"/>
+    <rect x="30" y="80" width="140" height="80" fill="#141119"/>
+    <rect x="86" y="118" width="28" height="42" fill="#0a0810"/>
+    <g class="window-glow">
+      <rect x="118" y="98" width="24" height="24" fill="#d9a441" opacity="0.95"/>
+      <rect x="128" y="98" width="1.5" height="24" fill="#141119"/>
+      <rect x="118" y="109" width="24" height="1.5" fill="#141119"/>
+    </g>
+    <rect x="46" y="98" width="18" height="18" fill="#0a0810"/>
+    <rect x="164" y="50" width="8" height="28" fill="#0a0810"/>
+  </svg>
+
+  <h1 class="title display">
+    <span class="num">7</span>
+    <span class="words">Nights Up</span>
+  </h1>
+
+  <p class="tagline">Survive your own family, one night at a time.</p>
+
+  <a class="btn" href="https://discord.gg/ZTNrnjJPRd" target="_blank" rel="noopener">
+    <svg width="18" height="14" viewBox="0 0 24 18" fill="currentColor" aria-hidden="true"><path d="M20.3 1.5A19.8 19.8 0 0 0 15.5 0c-.2.4-.5 1-.7 1.4a18.3 18.3 0 0 0-5.6 0c-.2-.4-.4-1-.7-1.4-1.7.3-3.3.8-4.8 1.5C.8 5.7-.2 9.8.1 13.9a20 20 0 0 0 6 3c.5-.6.9-1.3 1.3-2a13 13 0 0 1-2-1c.2-.1.3-.3.5-.4a14.3 14.3 0 0 0 12.2 0c.2.1.3.3.5.4a13 13 0 0 1-2 1c.4.7.8 1.4 1.3 2a20 20 0 0 0 6-3c.4-4.7-.8-8.8-3.6-12.4ZM8 11.4c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm8 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
+    Join the Discord
+  </a>
+
+  <p class="construction-note mono">SITE + GAME UNDER CONSTRUCTION</p>
+</header>
+
+<section class="coverage">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="display">Camera coverage</h2>
+      <span class="tag mono">7 OF 8 ROOMS ONLINE</span>
+    </div>
+    <div class="camlist">
+      <div class="camrow"><span class="dot on"></span><span class="room">Kitchen</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow"><span class="dot on"></span><span class="room">Living room</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow"><span class="dot on"></span><span class="room">Hallway</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow"><span class="dot on"></span><span class="room">Bedroom</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow"><span class="dot on"></span><span class="room">Basement</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow"><span class="dot on"></span><span class="room">Attic</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow"><span class="dot on"></span><span class="room">Study</span><span class="stat mono">ONLINE</span></div>
+      <div class="camrow off"><span class="dot off"></span><span class="room">Bathroom</span><span class="stat mono">NO SIGNAL</span></div>
+    </div>
+    <p class="cov-note">One room in the house was never wired. Whatever that's worth to you.</p>
+  </div>
+</section>
+
+<section class="progression">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="display">Threat log</h2>
+      <span class="tag mono">SELECT A STAGE</span>
+    </div>
+
+    <div class="filelog">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-panel="p1" role="tab" aria-selected="true"><span class="r">01&ndash;03</span><span class="w">Mother</span></button>
+        <button class="tab" data-panel="p2" role="tab" aria-selected="false"><span class="r">03&ndash;05</span><span class="w">+ Father</span></button>
+        <button class="tab" data-panel="p3" role="tab" aria-selected="false"><span class="r">05&ndash;07</span><span class="w">+ Grandfather</span></button>
+        <button class="tab" data-panel="p4" role="tab" aria-selected="false"><span class="r">08</span><span class="w">Everyone (optional)</span></button>
+      </div>
+      <div class="panels">
+        <div class="panel active" id="p1">
+          <h3>She's still learning the house.</h3>
+          <p>Slow and mostly predictable &mdash; if you're careful about where you breathe.</p>
+          <div class="figures" aria-hidden="true">
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 2c4 0 6 4 6 8s-2 6-6 6-6-2-6-6 2-8 6-8Z M6 44V26c0-7 5-11 11-11s11 4 11 11v18Z" fill="#d9a441"/></svg>
+          </div>
+        </div>
+        <div class="panel" id="p2">
+          <h3>He doesn't wait by doors.</h3>
+          <p>He walks straight through them. Two sets of footsteps to track now, not one.</p>
+          <div class="figures" aria-hidden="true">
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 2c4 0 6 4 6 8s-2 6-6 6-6-2-6-6 2-8 6-8Z M6 44V26c0-7 5-11 11-11s11 4 11 11v18Z" fill="#d9a441"/></svg>
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 0c5 0 7 4 7 9s-2 7-7 7-7-2-7-7 2-9 7-9Z M4 44V25c0-8 6-13 13-13s13 5 13 13v19Z" fill="#d9a441"/></svg>
+          </div>
+        </div>
+        <div class="panel" id="p3">
+          <h3>He built half this house himself.</h3>
+          <p>Your grandfather knows every place you can hide &mdash; and every place you can't.</p>
+          <div class="figures" aria-hidden="true">
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 2c4 0 6 4 6 8s-2 6-6 6-6-2-6-6 2-8 6-8Z M6 44V26c0-7 5-11 11-11s11 4 11 11v18Z" fill="#d9a441"/></svg>
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 0c5 0 7 4 7 9s-2 7-7 7-7-2-7-7 2-9 7-9Z M4 44V25c0-8 6-13 13-13s13 5 13 13v19Z" fill="#d9a441"/></svg>
+            <svg class="figure" viewBox="0 0 34 44"><path d="M16 3c4 0 5 4 5 7s-1 6-5 6-5-2-5-6 1-7 5-7Z M8 44l-1-12c-1-6 3-11 9-11s10 5 9 11l-1 12Z" fill="#d9a441"/></svg>
+          </div>
+        </div>
+        <div class="panel" id="p4">
+          <h3>An extra night, for anyone who wants it.</h3>
+          <p>Mother, father, grandfather &mdash; and a grandmother nobody's seen arrive. The hardest version of the house.</p>
+          <div class="figures" aria-hidden="true">
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 2c4 0 6 4 6 8s-2 6-6 6-6-2-6-6 2-8 6-8Z M6 44V26c0-7 5-11 11-11s11 4 11 11v18Z" fill="#b23838"/></svg>
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 0c5 0 7 4 7 9s-2 7-7 7-7-2-7-7 2-9 7-9Z M4 44V25c0-8 6-13 13-13s13 5 13 13v19Z" fill="#b23838"/></svg>
+            <svg class="figure" viewBox="0 0 34 44"><path d="M16 3c4 0 5 4 5 7s-1 6-5 6-5-2-5-6 1-7 5-7Z M8 44l-1-12c-1-6 3-11 9-11s10 5 9 11l-1 12Z" fill="#b23838"/></svg>
+            <svg class="figure" viewBox="0 0 34 44"><path d="M17 2c3 0 5 3 5 7s-2 6-5 6-5-2-5-6 2-7 5-7Z M5 44l2-16c1-6 5-9 10-9s9 3 10 9l2 16Z" fill="#b23838"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="household">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="display">The household</h2>
+      <span class="tag mono">TAP OR HOVER A FILE</span>
+    </div>
+
+    <div class="board">
+      <button class="tile" data-tile>
+        <svg class="bust" viewBox="0 0 56 68" aria-hidden="true"><path d="M28 4c6 0 10 6 10 13s-4 10-10 10-10-3-10-10 4-13 10-13Z M10 68V44c0-11 8-18 18-18s18 7 18 18v24Z" fill="#8a662c"/></svg>
+        <div class="reveal">
+          <h3 class="display">Mother</h3>
+          <p class="active-from">NIGHT 01</p>
+          <p class="line">Still hums your bedtime song. Forgot the words a while ago.</p>
+        </div>
+        <span class="tap-hint mono">MOTHER</span>
+      </button>
+      <button class="tile" data-tile>
+        <svg class="bust" viewBox="0 0 56 68" aria-hidden="true"><path d="M28 0c8 0 12 6 12 14s-4 11-12 11-12-3-12-11 4-14 12-14Z M6 68V39c0-13 10-20 22-20s22 7 22 20v29Z" fill="#8a662c"/></svg>
+        <div class="reveal">
+          <h3 class="display">Father</h3>
+          <p class="active-from">NIGHT 03</p>
+          <p class="line">Used to check under your bed for monsters. Doesn't need to anymore.</p>
+        </div>
+        <span class="tap-hint mono">FATHER</span>
+      </button>
+      <button class="tile" data-tile>
+        <svg class="bust" viewBox="0 0 56 68" aria-hidden="true"><path d="M27 5c6 0 8 6 8 11s-2 9-8 9-8-3-8-9 2-11 8-11Z M14 68l-2-19c-1-9 5-17 15-17s16 8 15 17l-2 19Z" fill="#8a662c"/></svg>
+        <div class="reveal">
+          <h3 class="display">Grandfather</h3>
+          <p class="active-from">NIGHT 05</p>
+          <p class="line">Built half of this house himself. Knows it better than you.</p>
+        </div>
+        <span class="tap-hint mono">GRANDFATHER</span>
+      </button>
+      <button class="tile extra" data-tile>
+        <svg class="bust" viewBox="0 0 56 68" aria-hidden="true"><path d="M28 3c5 0 7 5 7 10s-2 9-7 9-7-3-7-9 2-10 7-10Z M8 68l3-25c1-9 8-14 17-14s16 5 17 14l3 25Z" fill="#b23838"/></svg>
+        <div class="reveal">
+          <h3 class="display">Grandmother</h3>
+          <p class="active-from">NIGHT 08 ONLY</p>
+          <p class="line">No one has seen her arrive. No one has seen her leave.</p>
+        </div>
+        <span class="tap-hint mono">???</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <div class="prose">
+      <h2 class="display" style="font-size:clamp(1.6rem,3.6vw,2.2rem); font-weight:500; margin:0 0 16px;">Follow the build</h2>
+      <p>Devlogs, art tests, and early looks go to Discord before anywhere else.</p>
+      <a class="btn" href="https://discord.gg/ZTNrnjJPRd" target="_blank" rel="noopener">
+        <svg width="18" height="14" viewBox="0 0 24 18" fill="currentColor" aria-hidden="true"><path d="M20.3 1.5A19.8 19.8 0 0 0 15.5 0c-.2.4-.5 1-.7 1.4a18.3 18.3 0 0 0-5.6 0c-.2-.4-.4-1-.7-1.4-1.7.3-3.3.8-4.8 1.5C.8 5.7-.2 9.8.1 13.9a20 20 0 0 0 6 3c.5-.6.9-1.3 1.3-2a13 13 0 0 1-2-1c.2-.1.3-.3.5-.4a14.3 14.3 0 0 0 12.2 0c.2.1.3.3.5.4a13 13 0 0 1-2 1c.4.7.8 1.4 1.3 2a20 20 0 0 0 6-3c.4-4.7-.8-8.8-3.6-12.4ZM8 11.4c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm8 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
+        Join the Discord
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; width:100%;">
+    <span>7 Nights Up &mdash; an independent game built in Roblox Studio. Not affiliated with Roblox Corporation.</span>
+    <a href="https://discord.gg/ZTNrnjJPRd" target="_blank" rel="noopener">discord.gg/ZTNrnjJPRd</a>
+  </div>
+</footer>
+
+<script>
+  // threat log tabs
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected','true');
+      var target = document.getElementById(tab.getAttribute('data-panel'));
+      if (target) target.classList.add('active');
+    });
+  });
+
+  // household tiles - tap to flip on touch devices, hover handles desktop via CSS
+  document.querySelectorAll('[data-tile]').forEach(function(tile){
+    tile.addEventListener('click', function(){
+      tile.classList.toggle('flipped');
+    });
+  });
+
+  // rotate a fake camera id occasionally for HUD flavor
+  var cams = ['CAM 04','CAM 01','CAM 07','CAM 02'];
+  var i = 0;
+  setInterval(function(){
+    i = (i + 1) % cams.length;
+    var el = document.getElementById('hudClock');
+    if (el) el.textContent = cams[i];
+  }, 6000);
+</script>
+
+</body>
+</html>
